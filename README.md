@@ -9,7 +9,7 @@
 This repository implements SHAPE (SHifted Adversaries using Pixel Elimination), a novel adversarial explanation method that exposes fundamental flaws in objective XAI evaluation metrics like insertion and deletion games.
 
 <p align="center">
-  <img src="images/shape_overview.png" alt="SHAPE Overview" width="800"/>
+  <img src="images/shape.png" alt="SHAPE Overview" width="800"/>
 </p>
 
 ## 📚 Paper Reference
@@ -44,17 +44,6 @@ SHAPE is an **adversarial explanation method** that:
 3. ✅ **Outperforms existing methods** - Achieves better insertion/deletion scores than GradCAM, GradCAM++, and comparable to RISE
 4. ❌ **But NOT human-interpretable** - Generates incomprehensible saliency maps
 
-### The Paradox
-
-<p align="center">
-  <img src="images/shape_paradox.png" alt="SHAPE Paradox" width="700"/>
-</p>
-
-**SHAPE reveals a critical flaw**: An explanation can be objectively "better" (higher insertion AUC, lower deletion AUC) while being subjectively useless (unintelligible to humans).
-
-This paradox questions the trustworthiness of causal evaluation metrics for XAI methods.
-
----
 
 ## 🔬 Core Concept
 
@@ -158,10 +147,6 @@ python shape_batch_processor.py \
 
 ### Comparison with Popular XAI Methods
 
-<p align="center">
-  <img src="images/comparison_results.png" alt="Comparison Results" width="800"/>
-</p>
-
 | Method | ResNet50 Insertion ↑ | ResNet50 Deletion ↓ | ResNet101 Insertion ↑ | ResNet101 Deletion ↓ |
 |--------|---------------------|--------------------|-----------------------|--------------------|
 | **GradCAM** | 0.684 | 0.223 | 0.687 | 0.174 |
@@ -171,15 +156,6 @@ python shape_batch_processor.py \
 
 ↑ Higher is better | ↓ Lower is better
 
-### Visual Comparison
-
-<p align="center">
-  <img src="images/visual_comparison.png" alt="Visual Comparison" width="900"/>
-</p>
-
-**Observation**: SHAPE achieves the best objective scores (insertion/deletion) while producing incomprehensible explanations, revealing the metrics' fundamental flaw.
-
----
 
 ## 🏗️ Repository Structure
 
@@ -378,158 +354,16 @@ python examples/reproduce_figure4.py \
 
 ---
 
-## 💡 Use Cases
-
-### ✅ What SHAPE is Good For
-
-1. **Testing evaluation metrics** - Expose flaws in objective measures
-2. **Research purposes** - Study the gap between objective and subjective quality
-3. **Benchmark** - Test if metrics can distinguish good from adversarial explanations
-4. **Model analysis** - Understand what models truly rely on (not just semantic features)
-
-### ❌ What SHAPE is NOT Good For
-
-1. **Practical XAI** - Not useful for end-users
-2. **Trust building** - Does not help humans understand models
-3. **Production systems** - Not deployable in real applications
-4. **Feature visualization** - Does not show interpretable patterns
-
----
-
-## 🤔 Frequently Asked Questions
-
-### Q: If SHAPE is not human-interpretable, what's the point?
-
-**A**: SHAPE is an **adversarial example for evaluation metrics**, not a practical XAI method. It demonstrates that:
-- Current metrics can be fooled
-- Objective scores don't guarantee subjective quality
-- We need better evaluation methods
-
-### Q: Should I use SHAPE in my application?
-
-**A**: **No**. Use RISE, GradCAM, or other established methods. SHAPE is a research tool to question evaluation metrics, not a production XAI method.
-
-### Q: How is this different from adversarial attacks on models?
-
-**A**: 
-- **Adversarial attacks**: Fool the model's prediction
-- **SHAPE**: Fools the XAI evaluation metrics
-- Both expose vulnerabilities in their respective targets
-
-### Q: Can SHAPE be used with any model?
-
-**A**: Yes, SHAPE is model-agnostic like RISE. Works with any classifier.
-
----
-
-## 🛠️ Advanced Usage
-
-### Custom Mask Generation
-
-```python
-# Generate masks with different parameters
-explainer.generate_masks(
-    N=8000,           # More masks = smoother explanations
-    s=10,             # Larger grid = finer details
-    p1=0.3,           # Lower p1 = more masking
-    savepath='custom_masks.npy'
-)
-```
-
-### Multi-GPU Processing
-
-```python
-# Use DataParallel for faster processing
-model = nn.DataParallel(model, device_ids=[0, 1, 2, 3])
-explainer = SHAPE(model, input_size=(224, 224), gpu_batch=800)
-```
-
-### Custom Evaluation
-
-```python
-from src.evaluation import evaluate_explanation
-
-results = evaluate_explanation(
-    model=model,
-    image=image,
-    saliency_map=saliency_map,
-    metrics=['insertion', 'deletion', 'pointing_game'],
-    steps=224  # Fine-grained evaluation
-)
-```
-
----
-
-## 📚 Related Work
-
-### Necessity & Sufficiency in XAI
-
-1. **Watson et al. (2021)** - "Local Explanations via Necessity and Sufficiency"
-2. **Chowdhury et al. (2023)** - "Explaining Explainers: Necessity and Sufficiency in Tabular Data"
-
-### XAI Evaluation Metrics
-
-1. **Petsiuk et al. (2018)** - "RISE: Randomized Input Sampling for Explanation" (Insertion/Deletion)
-2. **Fong & Vedaldi (2017)** - "Interpretable Explanations by Meaningful Perturbation"
-
-### Adversarial Examples
-
-1. **Goodfellow et al. (2015)** - "Explaining and Harnessing Adversarial Examples"
-2. **Akhtar & Mian (2018)** - "Threat of Adversarial Attacks on Deep Learning"
-
----
-
-## 🐛 Troubleshooting
-
-### Issue: Out of Memory
-
-```bash
-# Reduce gpu_batch size
-explainer = SHAPE(model, input_size=(224, 224), gpu_batch=50)
-```
-
-### Issue: Slow mask generation
-
-```bash
-# Generate masks once and reuse
-explainer.generate_masks(N=4000, s=8, p1=0.5, savepath='masks.npy')
-
-# Later, just load
-explainer.load_masks('masks.npy')
-```
-
-### Issue: SHAPE masks look too scattered
-
-This is **expected behavior**. SHAPE is adversarial and produces incomprehensible explanations. If you want interpretable explanations, use RISE or GradCAM instead.
-
----
-
 ## 👥 Authors & Contact
 
 **Prithwijit Chowdhury** - pchowdhury6@gatech.edu
-**Mohit Prabhushankar** - mohit.p@gatech.edu
-**Ghassan AlRegib** - alregib@gatech.edu
-**Mohamed Deriche** - m.deriche@ajman.ac.ae
 
-**Affiliation**: OLIVES Lab, Georgia Institute of Technology
-
-**Lab Website**: [OLIVES @ Georgia Tech](https://ghassanalregib.info/)
-
----
 
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
----
 
-## 🙏 Acknowledgments
-
-- RISE implementation inspired by Petsiuk et al. (2018)
-- GradCAM comparisons using pytorch-grad-cam library
-- Research supported by Georgia Institute of Technology
-
----
 
 ## 📌 Citation
 
@@ -547,15 +381,5 @@ If you use SHAPE in your research, please cite:
 }
 ```
 
----
-
-## 🔗 Links
-
-- 📄 [Paper (IEEE Xplore)](https://ieeexplore.ieee.org/document/10647779)
-- 🏛️ [OLIVES Lab](https://ghassanalregib.info/)
-- 💻 [GitHub Repository](https://github.com/yourusername/SHAPE-adversarial-explanations)
-- 📧 [Contact](mailto:pchowdhury6@gatech.edu)
-
----
 
 **⚠️ Important Note**: SHAPE is a research tool designed to expose flaws in XAI evaluation metrics. It is NOT intended for practical use in explaining model decisions to end-users. For production XAI applications, use established methods like RISE, GradCAM, or SHAP.
